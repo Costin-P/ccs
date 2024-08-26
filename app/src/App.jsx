@@ -9,7 +9,7 @@ const LOG_NOTIFICATIONS = true;
 export default function App() {
  const streetCount = 6;
  const streetLength = 10;
- const carSpeed = 0.09;
+ const carSpeed = 0.03;
 
  const [mission, setMission] = useState(false);
 
@@ -108,7 +108,7 @@ export default function App() {
        );
 
       // If the car is close to an ambulance, set the car to be stopped
-      if (isCloseToAmbulance) {
+      if (isCloseToAmbulance && mission !== "Awaiting mission") {
        return {
         ...vehicle, // dont update its gps
        };
@@ -181,15 +181,27 @@ export default function App() {
         };
        }
       } else {
-        const destination = getRandomCoordinates(gridSize, streetLength);
-        const newRoute = getRoute({ x: vehicle.x, y: vehicle.y }, destination, gridSize);
-
-        setMission(destination);
+       if (!mission) {
+        setMission("pending");
 
         return {
          ...vehicle,
-         route: newRoute,
         };
+       } else if (mission === "pending") {
+        return {
+         ...vehicle,
+        };
+       } else {
+        if (mission.x === vehicle.x && mission.y === vehicle.y) {
+         setMission(false);
+        } else {
+         const newRoute = getRoute({ x: vehicle.x, y: vehicle.y }, mission, gridSize);
+         return {
+          ...vehicle,
+          route: newRoute,
+         };
+        }
+       }
       }
      }
      return vehicle;
@@ -199,6 +211,18 @@ export default function App() {
 
   return () => clearInterval(interval);
  }, [carSpeed, gridSize, streetLength, vehicles]);
+
+ useEffect(() => {
+  if (mission === "pending") {
+   setTimeout(() => {
+    const destination = getRandomCoordinates(gridSize, streetLength);
+    setMission(destination);
+   }, 3000);
+   // const newRoute = getRoute({ x: vehicle.x, y: vehicle.y }, destination, gridSize);
+
+   setMission("Awaiting mission");
+  }
+ }, [mission]);
 
  const calculateDistance = (x1, y1, x2, y2) => {
   return Math.sqrt((x1 - x2) ** 2 + (y1 - y2) ** 2);
@@ -255,7 +279,7 @@ export default function App() {
  const [log, setLog] = useState([]);
 
  const notifyCar = (carReg) => {
-  const now = new Date();
+  const now = new Date().toISOString();
   const logEntry = log.findIndex((entry) => entry.carReg === carReg);
 
   if (logEntry < 0) {
@@ -310,7 +334,7 @@ export default function App() {
         (v) => v.type === "ambulance" && calculateDistance(vehicle.x, vehicle.y, v.x, v.y) <= 9
        );
 
-      if (isCloseToAmbulance && LOG_NOTIFICATIONS) {
+      if (isCloseToAmbulance &&  mission &&  mission !== "Awaiting mission" && LOG_NOTIFICATIONS) {
        notifyCar(vehicle.carReg);
       }
 
@@ -325,12 +349,12 @@ export default function App() {
         }}>
         <div
          className={`flex flex-col justify-center items-center relative text-center rounded-full`}>
-         {isCloseToAmbulance && vehicle.type === "car" && (
+         {isCloseToAmbulance && mission !== "Awaiting mission" && vehicle.type === "car" && (
           <span className="absolute -top-1/3 text-red-400 font-bold">!</span>
          )}
          {vehicle.type === "ambulance" ? (
           <span
-           className={`text-3xl ${
+           className={`text-3xl ${mission !== "Awaiting mission" ? "" : "opacity-60"} ${
             vehicle.direction.axis === "x" && vehicle.direction.dir === "-" ? "rota" : ""
            }`}>
            <Ambulance />
@@ -366,18 +390,25 @@ export default function App() {
      </div>
      <div className="flex flex-col bg-white flex-1 p-2 rounded-lg shadow-md shadow-black/30">
       <p className="">Ambulance:</p>
-      <p className="font-semibold">
+      <p className={`font-semibold`}>
        🚑 {vehicles.filter((veh) => veh.type === "ambulance").length}
       </p>
      </div>
      <div className="flex flex-col bg-white flex-1 min-w-[105px] p-2 rounded-lg shadow-md shadow-black/30">
-      <p className="">Mission:</p>
-      {mission && (
-       <p className="font-semibold flex flex-nowrap gap-x-1">
-        <span className="animate-colorFlash rounded-full w-[16px] h-[16px] block my-auto ml-[3px]" />
-        {Object.values(mission).toString()}
-       </p>
-      )}
+      <p>Mission:</p>
+
+      <p className="font-semibold flex flex-nowrap gap-x-1">
+       <span
+        className={`${
+         mission !== "Awaiting mission" ? "animate-colorFlash" : "bg-green-200"
+        } rounded-full w-[16px] h-[16px] block my-auto ml-[3px]`}
+       />
+       {mission &&
+        mission !== "Pending" &&
+        mission !== "Awaiting mission" &&
+        Object.values(mission).toString()}
+       {mission === "Awaiting mission" && mission}
+      </p>
      </div>
     </div>
 

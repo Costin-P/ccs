@@ -16,18 +16,21 @@ import { ApiService } from "@/service/ApiService";
 export default function Chart1() {
  const [data, setData] = useState([]);
 
- const fetchData = useCallback(async () => {
+ const [fromDate, setFromDate] = useState(undefined);
+ const [toDate, setToDate] = useState(undefined);
 
-  const response = await ApiService(`api/logsChartData`)
+ const fetchData = useCallback(async () => {
+  const postData = { fromDate, toDate };
+  const response = await ApiService(`api/logsChartData`, postData);
   const { data: newData } = await response;
-  
+
   if (!newData) return;
 
   // Compare new data with the current state
   if (JSON.stringify(newData) !== JSON.stringify(data)) {
    setData(newData);
   }
- }, [data]); 
+ }, [data, fromDate, toDate]);
 
  useEffect(() => {
   const interval = setInterval(() => {
@@ -37,11 +40,37 @@ export default function Chart1() {
   return () => clearInterval(interval);
  }, [fetchData]);
 
+ const resetDates = () => {
+  setFromDate('');
+  setToDate('');
+};
+
  return (
   <div className="flex flex-col w-full h-[50vh] bg-white py-4 my-4 rounded-lg shadow-md shadow-black/40 text-xs font-semibold col-span-full">
-   <p className="text-lg text-center">Amount of times a specific car has been notified</p>
-   
-   {data.length == 0 && <p className="m-auto">Loading...</p> }
+   <div className="flex justify-between">
+    <p className="text-lg px-2">Amount of times a specific car has been notified</p>
+    <div className="flex gap-2 px-2">
+     <input
+      value={fromDate}
+      onChange={(e) => setFromDate(e.target.value)}
+      type="datetime-local"
+      className="rounded-lg p-1 shadow-md shadow-black/40"
+     />
+     <input
+      value={toDate}
+      onChange={(e) => setToDate(e.target.value)}
+      type="datetime-local"
+      className="rounded-lg p-1 shadow-md shadow-black/40"
+     />
+     <button
+      className="rounded-lg p-1 shadow-md shadow-black/40"
+      onClick={resetDates}>
+      Reset
+     </button>
+    </div>
+   </div>
+
+   {data.length == 0 && <p className="m-auto">Loading...</p>}
    <ResponsiveContainer width="100%" height="100%">
     <BarChart
      width={150}
