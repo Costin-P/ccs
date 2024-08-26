@@ -279,7 +279,7 @@ export default function App() {
  const [log, setLog] = useState([]);
 
  const notifyCar = (carReg) => {
-  const now = new Date().toISOString();
+  const now = new Date().toLocaleString('en-GB', { timeZone: 'Europe/London' });
   const logEntry = log.findIndex((entry) => entry.carReg === carReg);
 
   if (logEntry < 0) {
