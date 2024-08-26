@@ -6,8 +6,14 @@ const Notifications = require("../models/notifications");
 router.post("/logNotification", async (req, res) => {
  try {
   const { data } = req.body;
-  console.log(`Sending notification ${data.car} ${new Date().toLocaleTimeString("en-gb")}`);
-  Notifications({ car: data.car, date: new Date(data.date).toISOString() }).save();
+
+  const [day, month, year, time] = data.date.split(/[/,:\s]+/);
+  const britishDate = new Date(`${year}-${month}-${day}T${time}:00Z`); // Adjust for UTC timezone
+
+  console.log(`Sending notification ${data.car} ${britishDate.toISOString()}`);
+
+  // Save the date as a Date object
+  await Notifications({ car: data.car, date: britishDate }).save();
 
   // Example:
   // Notify the user via the app and play a specific sound
