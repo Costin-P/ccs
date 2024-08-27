@@ -6,14 +6,26 @@ const Notifications = require("../models/notifications");
 router.post("/logNotification", async (req, res) => {
  try {
   const { data } = req.body;
+  console.log("🚀 ~ router.post ~ data:", data.date);
 
-  const [day, month, year, time] = data.date.split(/[/,:\s]+/);
-  const britishDate = new Date(`${year}-${month}-${day}T${time}:00Z`); // Adjust for UTC timezone
+  const [datePart, timePart] = data.date.split(", ");
+  const [day, month, year] = datePart.split("/");
+  const isoDate = `${year}-${month}-${day}T${timePart}`;
+  const dateObject = new Date(isoDate);
+  const isDST =
+   dateObject.getTimezoneOffset() <
+   Math.max(
+    new Date(dateObject.getFullYear(), 0, 1).getTimezoneOffset(),
+    new Date(dateObject.getFullYear(), 6, 1).getTimezoneOffset()
+   );
 
-  console.log(`Sending notification ${data.car} ${britishDate.toISOString()}`);
+  // If it's daylight saving time, add one hour
+  if (isDST) {
+   dateObject.setHours(dateObject.getHours() + 1);
+  }
 
-  // Save the date as a Date object
-  await Notifications({ car: data.car, date: britishDate }).save();
+  console.log(`Sending notification ${data.car} ${dateObject}`);
+  Notifications({ car: data.car, date: new Date(dateObject).toISOString() }).save();
 
   // Example:
   // Notify the user via the app and play a specific sound
@@ -45,8 +57,21 @@ router.post("/logsChartData", async (req, res) => {
  try {
   const { fromDate, toDate } = req.body.data;
 
-  const from = new Date(fromDate);
-  const to = new Date(toDate);
+  let from = new Date(fromDate);
+  let to = new Date(toDate);
+
+  const isDST =
+   from.getTimezoneOffset() <
+   Math.max(
+    new Date(from.getFullYear(), 0, 1).getTimezoneOffset(),
+    new Date(from.getFullYear(), 6, 1).getTimezoneOffset()
+   );
+
+  // If it's daylight saving time, add one hour
+  if (isDST) {
+   from.setHours(from.getHours() + 1);
+   to.setHours(to.getHours() + 1);
+  }
 
   // Validate the dates
   if (isNaN(from.getTime()) || isNaN(to.getTime()) || from > to) {

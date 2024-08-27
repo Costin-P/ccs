@@ -279,7 +279,7 @@ export default function App() {
  const [log, setLog] = useState([]);
 
  const notifyCar = (carReg) => {
-  const now = new Date().toLocaleString('en-GB', { timeZone: 'Europe/London' });
+  const now = new Date().toLocaleString();
   const logEntry = log.findIndex((entry) => entry.carReg === carReg);
 
   if (logEntry < 0) {
@@ -334,7 +334,7 @@ export default function App() {
         (v) => v.type === "ambulance" && calculateDistance(vehicle.x, vehicle.y, v.x, v.y) <= 9
        );
 
-      if (isCloseToAmbulance &&  mission &&  mission !== "Awaiting mission" && LOG_NOTIFICATIONS) {
+      if (isCloseToAmbulance && mission && mission !== "Awaiting mission" && LOG_NOTIFICATIONS) {
        notifyCar(vehicle.carReg);
       }
 
