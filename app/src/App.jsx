@@ -9,7 +9,7 @@ const LOG_NOTIFICATIONS = true;
 export default function App() {
  const streetCount = 6;
  const streetLength = 10;
- const carSpeed = 0.03;
+ const [carSpeed, setcarSpeed] = useState(0.03);
 
  const [mission, setMission] = useState(false);
 
@@ -379,10 +379,14 @@ export default function App() {
    </div>
 
    <div className="grid grid-cols-2 gap-2 mt-4 ">
-    <div className="grid grid-cols-2 w-[500px] gap-2 h-full text-xl">
+    <div className="grid grid-cols-3 w-[500px] gap-2 h-full text-xl">
      <div className="flex flex-col bg-white flex-1 p-2 rounded-lg shadow-md shadow-black/30 whitespace-nowrap">
       <p className="">Server:</p>
       <p className="font-semibold">🟢 Online</p>
+     </div>
+     <div className="flex flex-col bg-white flex-1 p-2 rounded-lg shadow-md shadow-black/30 whitespace-nowrap">
+      <p className="">Car Speed:</p>
+     <input className="my-auto" type="range" value={carSpeed} onChange={(e)=>setcarSpeed(parseFloat(e.target.value))} step="0.01" min="0.01" max="0.1"/>
      </div>
      <div className="flex flex-col bg-white flex-1 p-2 rounded-lg shadow-md shadow-black/30">
       <p className="">Cars:</p>
@@ -394,7 +398,7 @@ export default function App() {
        🚑 {vehicles.filter((veh) => veh.type === "ambulance").length}
       </p>
      </div>
-     <div className="flex flex-col bg-white flex-1 min-w-[105px] p-2 rounded-lg shadow-md shadow-black/30">
+     <div className="flex flex-col bg-white flex-1 min-w-[105px] p-2 rounded-lg shadow-md shadow-black/30 col-span-2">
       <p>Mission:</p>
 
       <p className="font-semibold flex flex-nowrap gap-x-1">
